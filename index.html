@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>積み崩しビンゴ</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<style>
+:root {
+  --main: #ff7a9e;
+  --sub: #fff5f8;
+  --border: #ff9bb3;
+}
+
+body {
+  font-family: "Kiwi Maru", sans-serif;
+  background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  width: 100%;
+  max-width: 380px;
+}
+
+.year-input {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.year-input input {
+  font-size: 22px;
+  border: none;
+  border-bottom: 3px solid var(--main);
+  text-align: center;
+  width: 120px;
+}
+
+.title {
+  text-align: center;
+  font-size: 18px;
+  color: var(--main);
+  margin-bottom: 10px;
+}
+
+.theme-select {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.theme-select button {
+  margin: 0 3px;
+  padding: 5px 10px;
+  border-radius: 15px;
+  border: none;
+  cursor: pointer;
+}
+
+.bingo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.cell {
+  aspect-ratio: 1 / 1;
+  background: var(--sub);
+  border: 2px dashed var(--border);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 14px;
+  padding: 5px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cell.empty::after {
+  content: "+";
+  font-size: 28px;
+  color: var(--border);
+}
+
+.cell.free {
+  background: var(--main);
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  border: none;
+}
+
+.cell.cleared::before {
+  content: "⭐";
+  position: absolute;
+  font-size: 36px;
+  animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+.buttons {
+  text-align: center;
+  margin-top: 15px;
+}
+
+button.main {
+  background: var(--main);
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: 320px;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="container" id="captureArea">
+  <div class="year-input">
+    <input type="number" placeholder="2026"> 年
+  </div>
+
+  <div class="title">積み崩しビンゴ</div>
+
+  <div class="theme-select">
+    <button onclick="setTheme('#ff7a9e','#fff5f8','#ff9bb3')">🌸</button>
+    <button onclick="setTheme('#7ad7ff','#f3fbff','#9bdcff')">💎</button>
+    <button onclick="setTheme('#7affb2','#f5fff9','#9bffd1')">🍀</button>
+  </div>
+
+  <div class="bingo">
+    <div class="cell empty"></div>
+    <div class="cell empty"></div>
+    <div class="cell empty"></div>
+
+    <div class="cell empty"></div>
+    <div class="cell free">FREE</div>
+    <div class="cell empty"></div>
+
+    <div class="cell empty"></div>
+    <div class="cell empty"></div>
+    <div class="cell empty"></div>
+  </div>
+</div>
+
+<div class="buttons">
+  <button class="main" onclick="saveImage()">画像として保存</button>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+
+<script>
+const cells = document.querySelectorAll(".cell");
+const fileInput = document.getElementById("fileInput");
+let activeCell = null;
+
+cells.forEach(cell => {
+  if (cell.classList.contains("free")) return;
+
+  cell.addEventListener("click", () => {
+    activeCell = cell;
+    const choice = prompt("1: テキスト入力\n2: 画像アップロード\n3: クリア済みにする");
+    if (choice === "1") {
+      const text = prompt("ゲーム名を入力");
+      if (text) {
+        cell.textContent = text;
+        cell.classList.remove("empty");
+      }
+    } else if (choice === "2") {
+      fileInput.click();
+    } else if (choice === "3") {
+      cell.classList.toggle("cleared");
+    }
+  });
+});
+
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  if (!file || !activeCell) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    activeCell.innerHTML = `<img src="${e.target.result}">`;
+    activeCell.classList.remove("empty");
+  };
+  reader.readAsDataURL(file);
+  fileInput.value = "";
+});
+
+function saveImage() {
+  html2canvas(document.getElementById("captureArea")).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "game_bingo.png";
+    link.href = canvas.toDataURL();
+    link.click();
+  });
+}
+
+function setTheme(main, sub, border) {
+  document.documentElement.style.setProperty('--main', main);
+  document.documentElement.style.setProperty('--sub', sub);
+  document.documentElement.style.setProperty('--border', border);
+}
+</script>
+</body>
+</html>
