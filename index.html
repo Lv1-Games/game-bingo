@@ -6,219 +6,195 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 
 <style>
 :root {
-  --main: #ff7a9e;
-  --sub: #fff5f8;
-  --border: #ff9bb3;
+  --main:#ff7a9e;
+  --sub:#fff5f8;
+  --border:#ff9bb3;
 }
 
 body {
-  font-family: "Kiwi Maru", sans-serif;
-  background: linear-gradient(135deg, #ffdde1, #ee9ca7);
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+  font-family:"Kiwi Maru",sans-serif;
+  background:linear-gradient(135deg,#ffdde1,#ee9ca7);
+  display:flex;
+  justify-content:center;
+  padding:20px;
 }
 
 .container {
-  background: white;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-  width: 100%;
-  max-width: 380px;
+  background:white;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
+  width:360px;
 }
 
-/* ===== 名前入力 ===== */
-.name-input {
-  text-align: center;
-  margin-bottom: 8px;
+/* ===== 入力 ===== */
+.name-input,.year-input {
+  text-align:center;
+  margin-bottom:6px;
 }
 
-.name-input input {
-  font-size: 18px;
-  border: none;
-  border-bottom: 2px solid var(--main);
-  text-align: center;
-  width: 200px;
-}
-
-/* ===== 年 ===== */
-.year-input {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
+.name-input input,
 .year-input input {
-  font-size: 22px;
-  border: none;
-  border-bottom: 3px solid var(--main);
-  text-align: center;
-  width: 120px;
+  border:none;
+  border-bottom:2px solid var(--main);
+  text-align:center;
 }
+
+.name-input input { font-size:18px;width:200px; }
+.year-input input { font-size:22px;width:120px; }
 
 .title {
-  text-align: center;
-  font-size: 18px;
-  color: var(--main);
-  margin-bottom: 10px;
+  text-align:center;
+  color:var(--main);
+  margin-bottom:8px;
 }
 
-.theme-select {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
+.theme-select { text-align:center;margin-bottom:10px; }
 .theme-select button {
-  margin: 0 3px;
-  padding: 5px 10px;
-  border-radius: 15px;
-  border: none;
-  cursor: pointer;
+  border:none;border-radius:15px;
+  padding:5px 10px;cursor:pointer;
 }
 
 /* ===== ビンゴ ===== */
 .bingo {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
 }
 
 .cell {
-  aspect-ratio: 1 / 1;
-  background: var(--sub);
-  border: 2px dashed var(--border);
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 14px;
-  padding: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
+  height:110px;
+  background:var(--sub);
+  border:2px dashed var(--border);
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:6px;
+  position:relative;
+  cursor:pointer;
+  overflow:hidden;
 }
 
 .cell.empty::after {
-  content: "+";
-  font-size: 28px;
-  color: var(--border);
+  content:"+";
+  font-size:28px;
+  color:var(--border);
 }
 
-/* ★ マス画像（比率完全維持） */
 .cell img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
 }
 
-/* FREE */
 .cell.free {
-  background: var(--main);
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-  border: none;
-  cursor: default;
+  background:var(--main);
+  color:white;
+  font-size:20px;
+  font-weight:bold;
+  border:none;
+  cursor:default;
 }
 
-/* ===== クリア表示 ===== */
+/* ===== 白縁取りテキスト ===== */
+.outline {
+  color:#000;
+  text-shadow:
+    -1px -1px 0 #fff,
+     1px -1px 0 #fff,
+    -1px  1px 0 #fff,
+     1px  1px 0 #fff;
+}
+
+/* ===== クリアマーク ===== */
 .clear-mark {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  animation: pop 0.3s ease;
-}
-
-.clear-mark img {
-  max-width: 80%;
-  max-height: 80%;
-  object-fit: contain; /* ★ 比率維持 */
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
 }
 
 .clear-mark span {
-  font-size: 36px;
+  font-size:65px; /* ← 3倍 */
+  line-height:1;
+  text-shadow:
+    -3px -3px 0 #fff,
+     3px -3px 0 #fff,
+    -3px  3px 0 #fff,
+     3px  3px 0 #fff;
 }
 
-@keyframes pop {
-  from { transform: scale(0); }
-  to { transform: scale(1); }
+.clear-mark img {
+  width:56px;height:56px;
+  object-fit:contain;
 }
 
-/* ===== フッターURL ===== */
+/* ===== フッター ===== */
 .footer-url {
-  text-align: center;
-  margin-top: 10px;
-  font-size: 10px;
-  color: #999;
+  text-align:center;
+  font-size:10px;
+  color:#999;
+  margin-top:8px;
 }
 
 /* ===== ボタン ===== */
 .buttons {
-  text-align: center;
-  margin-top: 15px;
+  text-align:center;
+  margin-top:12px;
 }
 
 button.main {
-  background: var(--main);
-  color: white;
-  border: none;
-  padding: 8px 18px;
-  border-radius: 20px;
-  cursor: pointer;
+  background:var(--main);
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:20px;
+  cursor:pointer;
+  margin:4px;
 }
 
 /* ===== モーダル ===== */
 .modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
 }
 
 .modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 20px;
-  width: 280px;
-  text-align: center;
+  background:white;
+  padding:20px;
+  border-radius:20px;
+  width:280px;
 }
 
 .modal-content button {
-  display: block;
-  width: 100%;
-  margin: 8px 0;
-  padding: 10px;
-  border-radius: 15px;
-  border: none;
-  background: var(--sub);
-  cursor: pointer;
+  width:100%;
+  margin:6px 0;
+  padding:10px;
+  border:none;
+  border-radius:15px;
+  background:var(--sub);
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 <div class="container" id="captureArea">
-
-  <!-- 名前 -->
-  <div class="name-input">
-    <input type="text" placeholder="名前">
-  </div>
-
-  <!-- 年 -->
-  <div class="year-input">
-    <input type="number" placeholder="2026"> 年
-  </div>
-
+  <div class="name-input"><input placeholder="名前"></div>
+  <div class="year-input"><input type="number" placeholder="2026"> 年</div>
   <div class="title">積み崩しビンゴ</div>
 
   <div class="theme-select">
@@ -228,132 +204,191 @@ button.main {
   </div>
 
   <div class="bingo">
-    <div class="cell empty"></div>
-    <div class="cell empty"></div>
-    <div class="cell empty"></div>
-
-    <div class="cell empty"></div>
-    <div class="cell free">FREE</div>
-    <div class="cell empty"></div>
-
-    <div class="cell empty"></div>
-    <div class="cell empty"></div>
-    <div class="cell empty"></div>
+    <div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div>
+    <div class="cell empty"></div><div class="cell free">FREE</div><div class="cell empty"></div>
+    <div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div>
   </div>
 
-  <div class="footer-url">
-    https://lv1-games.github.io/game-bingo/
-  </div>
+  <div class="footer-url">https://lv1-games.github.io/game-bingo/</div>
 </div>
 
 <div class="buttons">
-  <button class="main" onclick="saveImage()">画像として保存</button>
+  <button class="main" onclick="saveImage()">画像保存</button>
+  <button class="main" onclick="shareShortURL()">短縮URL共有</button>
+  <button class="main" onclick="resetAll()">リセット</button>
 </div>
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <button onclick="inputText()">📝 テキスト入力</button>
-    <button onclick="uploadImage()">🖼 画像アップロード</button>
-    <button onclick="setClearText()">🔤 クリア文字</button>
-    <button onclick="setClearImage()">🖼 クリア画像</button>
-    <button onclick="closeModal()">キャンセル</button>
-  </div>
+  <button onclick="inputText()">📝 テキスト</button>
+  <button onclick="uploadImage()">🖼 画像</button>
+　<hr>
+　<button onclick="setClearStar()">⭐ クリアマーク</button>
+  <button onclick="setClearText()">🔤 クリア文字</button>
+  <button onclick="setClearImage()">🖼 クリア画像</button>
+　<hr>
+  <button onclick="closeModal()">キャンセル</button>
+</div>
+
 </div>
 
 <input type="file" id="fileInput" accept="image/*" hidden>
 
 <script>
-const cells = document.querySelectorAll(".cell");
-const modal = document.getElementById("modal");
-const fileInput = document.getElementById("fileInput");
-let activeCell = null;
+const STORAGE_KEY="game-bingo-state";
+const cells=document.querySelectorAll(".cell");
+const modal=document.getElementById("modal");
+const fileInput=document.getElementById("fileInput");
+let activeCell=null;
 
-cells.forEach(cell => {
-  if (cell.classList.contains("free")) return;
-  cell.addEventListener("click", () => {
-    activeCell = cell;
-    modal.style.display = "flex";
-  });
+cells.forEach(c=>{
+  if(c.classList.contains("free"))return;
+  c.onclick=()=>{activeCell=c;modal.style.display="flex";}
 });
 
-function closeModal() {
-  modal.style.display = "none";
-}
+function closeModal(){modal.style.display="none";}
 
-function inputText() {
-  const text = prompt("ゲーム名を入力");
-  if (text && activeCell) {
-    activeCell.textContent = text;
+function inputText(){
+  const t=prompt("ゲーム名");
+  if(t&&activeCell){
+    activeCell.innerHTML=`<span class="outline">${t}</span>`;
     activeCell.classList.remove("empty");
+    saveState();
   }
   closeModal();
 }
 
-function uploadImage() {
-  fileInput.onchange = () => {
-    const file = fileInput.files[0];
-    if (!file || !activeCell) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      activeCell.innerHTML = `<img src="${e.target.result}">`;
+function uploadImage(){
+  fileInput.onchange=()=>{
+    const f=fileInput.files[0];
+    if(!f||!activeCell)return;
+    const r=new FileReader();
+    r.onload=e=>{
+      activeCell.innerHTML=`<img src="${e.target.result}">`;
       activeCell.classList.remove("empty");
+      saveState();
     };
-    reader.readAsDataURL(file);
-    fileInput.value = "";
+    r.readAsDataURL(f);
+    fileInput.value="";
     closeModal();
   };
   fileInput.click();
 }
 
-function removeClearMark(cell) {
-  const mark = cell.querySelector(".clear-mark");
-  if (mark) mark.remove();
+function clearMark(el){
+  const m=el.querySelector(".clear-mark");
+  if(m)m.remove();
 }
 
-function setClearText() {
-  const text = prompt("クリア表示文字");
-  if (!text || !activeCell) return;
-  removeClearMark(activeCell);
-  const mark = document.createElement("div");
-  mark.className = "clear-mark";
-  mark.innerHTML = `<span>${text}</span>`;
-  activeCell.appendChild(mark);
+function setClearStar(){
+  clearMark(activeCell);
+  const m=document.createElement("div");
+  m.className="clear-mark";
+  m.innerHTML="<span>⭐</span>";
+  activeCell.appendChild(m);
+  saveState();
   closeModal();
 }
 
-function setClearImage() {
-  fileInput.onchange = () => {
-    const file = fileInput.files[0];
-    if (!file || !activeCell) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      removeClearMark(activeCell);
-      const mark = document.createElement("div");
-      mark.className = "clear-mark";
-      mark.innerHTML = `<img src="${e.target.result}">`;
-      activeCell.appendChild(mark);
+function setClearText(){
+  const t=prompt("クリア文字");
+  if(!t)return;
+  clearMark(activeCell);
+  const m=document.createElement("div");
+  m.className="clear-mark";
+  m.innerHTML=`<span>${t}</span>`;
+  activeCell.appendChild(m);
+  saveState();
+  closeModal();
+}
+
+function setClearImage(){
+  fileInput.onchange=()=>{
+    const f=fileInput.files[0];
+    if(!f)return;
+    const r=new FileReader();
+    r.onload=e=>{
+      clearMark(activeCell);
+      const m=document.createElement("div");
+      m.className="clear-mark";
+      m.innerHTML=`<img src="${e.target.result}">`;
+      activeCell.appendChild(m);
+      saveState();
     };
-    reader.readAsDataURL(file);
-    fileInput.value = "";
+    r.readAsDataURL(f);
+    fileInput.value="";
     closeModal();
   };
   fileInput.click();
 }
 
-function saveImage() {
-  html2canvas(document.getElementById("captureArea")).then(canvas => {
-    const a = document.createElement("a");
-    a.download = "game_bingo.png";
-    a.href = canvas.toDataURL();
+function getState(){
+  return {
+    name:document.querySelector(".name-input input").value,
+    year:document.querySelector(".year-input input").value,
+    cells:Array.from(cells).map(c=>{
+      if(c.classList.contains("free"))return{free:true};
+      return {html:c.innerHTML};
+    })
+  };
+}
+
+function applyState(s){
+  document.querySelector(".name-input input").value=s.name||"";
+  document.querySelector(".year-input input").value=s.year||"";
+  s.cells.forEach((d,i)=>{
+    if(d.free)return;
+    cells[i].innerHTML=d.html||"";
+    if(d.html)cells[i].classList.remove("empty");
+  });
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(getState()));
+}
+
+function resetAll(){
+  if(!confirm("すべてリセットしますか？"))return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.href=location.pathname;
+}
+
+async function shareShortURL(){
+  const json=JSON.stringify(getState());
+  const comp=LZString.compressToEncodedURIComponent(json);
+  const long=`${location.origin}${location.pathname}?data=${comp}`;
+  const res=await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(long)}`);
+  const short=await res.text();
+  navigator.clipboard.writeText(short);
+  alert("短縮URLをコピーしました");
+}
+
+async function saveImage(){
+  await document.fonts.ready;
+  html2canvas(captureArea,{scale:1}).then(c=>{
+    const a=document.createElement("a");
+    a.href=c.toDataURL();
+    a.download="game_bingo.png";
     a.click();
   });
 }
 
-function setTheme(main, sub, border) {
-  document.documentElement.style.setProperty('--main', main);
-  document.documentElement.style.setProperty('--sub', sub);
-  document.documentElement.style.setProperty('--border', border);
+function setTheme(m,s,b){
+  document.documentElement.style.setProperty("--main",m);
+  document.documentElement.style.setProperty("--sub",s);
+  document.documentElement.style.setProperty("--border",b);
 }
+
+window.onload=()=>{
+  const p=new URLSearchParams(location.search);
+  if(p.get("data")){
+    applyState(JSON.parse(LZString.decompressFromEncodedURIComponent(p.get("data"))));
+  }else{
+    const s=localStorage.getItem(STORAGE_KEY);
+    if(s)applyState(JSON.parse(s));
+  }
+  document.querySelectorAll("input").forEach(i=>i.oninput=saveState);
+};
 </script>
 </body>
 </html>
