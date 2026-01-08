@@ -64,6 +64,10 @@ body {
   cursor: pointer;
 }
 
+.bingo-wrapper {
+  position: relative;
+}
+
 .bingo {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -89,7 +93,7 @@ body {
 .cell img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* ← 見切れ防止 */
+  object-fit: contain;
   background: white;
 }
 
@@ -105,26 +109,53 @@ body {
   font-size: 20px;
   font-weight: bold;
   border: none;
+  cursor: default;
 }
 
-.cell.cleared::before {
-  content: "⭐";
+.clear-mark {
   position: absolute;
-  font-size: 36px;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
   animation: pop 0.3s ease;
 }
 
-/* ⭐ スマホでは星を大きく */
-@media (max-width: 480px) {
-  .cell.cleared::before {
-    font-size: 52px;
-  }
+.clear-mark span {
+  font-size: 36px;
+}
+
+.clear-mark img {
+  max-width: 80%;
+  max-height: 80%;
 }
 
 @keyframes pop {
   from { transform: scale(0); }
   to { transform: scale(1); }
+}
+
+/* ===== ビンゴライン ===== */
+.bingo-line {
+  position: absolute;
+  background: var(--main);
+  height: 6px;
+  border-radius: 5px;
+  transform-origin: left center;
+  animation: draw 0.4s ease forwards;
+}
+
+@keyframes draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.footer-url {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 10px;
+  color: #999;
 }
 
 .buttons {
@@ -169,7 +200,6 @@ button.main {
   border: none;
   background: var(--sub);
   cursor: pointer;
-  font-size: 14px;
 }
 </style>
 </head>
@@ -188,18 +218,24 @@ button.main {
     <button onclick="setTheme('#7affb2','#f5fff9','#9bffd1')">🍀</button>
   </div>
 
-  <div class="bingo">
-    <div class="cell empty"></div>
-    <div class="cell empty"></div>
-    <div class="cell empty"></div>
+  <div class="bingo-wrapper" id="bingoWrapper">
+    <div class="bingo" id="bingo">
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
 
-    <div class="cell empty"></div>
-    <div class="cell free">FREE</div>
-    <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell free">FREE</div>
+      <div class="cell empty"></div>
 
-    <div class="cell empty"></div>
-    <div class="cell empty"></div>
-    <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+      <div class="cell empty"></div>
+    </div>
+  </div>
+
+  <div class="footer-url">
+    https://lv1-games.github.io/game-bingo/
   </div>
 </div>
 
@@ -207,12 +243,12 @@ button.main {
   <button class="main" onclick="saveImage()">画像として保存</button>
 </div>
 
-<!-- モーダル -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <button onclick="inputText()">📝 テキスト入力</button>
     <button onclick="uploadImage()">🖼 画像アップロード</button>
-    <button onclick="toggleClear()">⭐ クリア切替</button>
+    <button onclick="setClearText()">🔤 クリア文字</button>
+    <button onclick="setClearImage()">🖼 クリア画像</button>
     <button onclick="closeModal()">キャンセル</button>
   </div>
 </div>
@@ -223,6 +259,7 @@ button.main {
 const cells = document.querySelectorAll(".cell");
 const modal = document.getElementById("modal");
 const fileInput = document.getElementById("fileInput");
+const wrapper = document.getElementById("bingoWrapper");
 let activeCell = null;
 
 cells.forEach(cell => {
@@ -247,25 +284,98 @@ function inputText() {
 }
 
 function uploadImage() {
+  fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if (!file || !activeCell) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      activeCell.innerHTML = `<img src="${e.target.result}">`;
+      activeCell.classList.remove("empty");
+    };
+    reader.readAsDataURL(file);
+    fileInput.value = "";
+    closeModal();
+  };
   fileInput.click();
 }
 
-fileInput.addEventListener("change", () => {
-  const file = fileInput.files[0];
-  if (!file || !activeCell) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    activeCell.innerHTML = `<img src="${e.target.result}">`;
-    activeCell.classList.remove("empty");
-  };
-  reader.readAsDataURL(file);
-  fileInput.value = "";
-  closeModal();
-});
+function removeClearMark(cell) {
+  const mark = cell.querySelector(".clear-mark");
+  if (mark) mark.remove();
+}
 
-function toggleClear() {
-  if (activeCell) activeCell.classList.toggle("cleared");
+function setClearText() {
+  const text = prompt("クリア表示文字");
+  if (!text || !activeCell) return;
+  removeClearMark(activeCell);
+  const mark = document.createElement("div");
+  mark.className = "clear-mark";
+  mark.innerHTML = `<span>${text}</span>`;
+  activeCell.appendChild(mark);
+  checkBingo();
   closeModal();
+}
+
+function setClearImage() {
+  fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if (!file || !activeCell) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      removeClearMark(activeCell);
+      const mark = document.createElement("div");
+      mark.className = "clear-mark";
+      mark.innerHTML = `<img src="${e.target.result}">`;
+      activeCell.appendChild(mark);
+      checkBingo();
+    };
+    reader.readAsDataURL(file);
+    fileInput.value = "";
+    closeModal();
+  };
+  fileInput.click();
+}
+
+/* ===== ビンゴ判定 ===== */
+function isCleared(index) {
+  if (cells[index].classList.contains("free")) return true;
+  return cells[index].querySelector(".clear-mark");
+}
+
+const lines = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
+
+function checkBingo() {
+  document.querySelectorAll(".bingo-line").forEach(l => l.remove());
+  lines.forEach(line => {
+    if (line.every(isCleared)) drawLine(line);
+  });
+}
+
+function drawLine(line) {
+  const rect1 = cells[line[0]].getBoundingClientRect();
+  const rect2 = cells[line[2]].getBoundingClientRect();
+  const wrap = wrapper.getBoundingClientRect();
+
+  const x1 = rect1.left + rect1.width/2 - wrap.left;
+  const y1 = rect1.top + rect1.height/2 - wrap.top;
+  const x2 = rect2.left + rect2.width/2 - wrap.left;
+  const y2 = rect2.top + rect2.height/2 - wrap.top;
+
+  const length = Math.hypot(x2-x1, y2-y1);
+  const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+
+  const lineEl = document.createElement("div");
+  lineEl.className = "bingo-line";
+  lineEl.style.width = length + "px";
+  lineEl.style.left = x1 + "px";
+  lineEl.style.top = y1 + "px";
+  lineEl.style.transform = `rotate(${angle}deg)`;
+
+  wrapper.appendChild(lineEl);
 }
 
 function saveImage() {
@@ -285,4 +395,3 @@ function setTheme(main, sub, border) {
 </script>
 </body>
 </html>
-
