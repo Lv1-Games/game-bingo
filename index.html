@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>積み崩しビンゴ</title>
+<title>ゲームビンゴカードメーカー</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -80,7 +80,7 @@ body {
   justify-content: center;
   text-align: center;
   font-size: 14px;
-  padding: 5px;
+  padding: 6px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -89,7 +89,8 @@ body {
 .cell img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* ← 見切れ防止 */
+  background: white;
 }
 
 .cell.empty::after {
@@ -110,7 +111,15 @@ body {
   content: "⭐";
   position: absolute;
   font-size: 36px;
+  pointer-events: none;
   animation: pop 0.3s ease;
+}
+
+/* ⭐ スマホでは星を大きく */
+@media (max-width: 480px) {
+  .cell.cleared::before {
+    font-size: 52px;
+  }
 }
 
 @keyframes pop {
@@ -132,10 +141,35 @@ button.main {
   cursor: pointer;
 }
 
-@media (max-width: 480px) {
-  .container {
-    max-width: 320px;
-  }
+/* ===== モーダル ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  width: 280px;
+  text-align: center;
+}
+
+.modal-content button {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 15px;
+  border: none;
+  background: var(--sub);
+  cursor: pointer;
+  font-size: 14px;
 }
 </style>
 </head>
@@ -146,7 +180,7 @@ button.main {
     <input type="number" placeholder="2026"> 年
   </div>
 
-  <div class="title">積み崩しビンゴ</div>
+  <div class="title">今年クリアしたいゲーム ビンゴ</div>
 
   <div class="theme-select">
     <button onclick="setTheme('#ff7a9e','#fff5f8','#ff9bb3')">🌸</button>
@@ -173,37 +207,52 @@ button.main {
   <button class="main" onclick="saveImage()">画像として保存</button>
 </div>
 
+<!-- モーダル -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button onclick="inputText()">📝 テキスト入力</button>
+    <button onclick="uploadImage()">🖼 画像アップロード</button>
+    <button onclick="toggleClear()">⭐ クリア切替</button>
+    <button onclick="closeModal()">キャンセル</button>
+  </div>
+</div>
+
 <input type="file" id="fileInput" accept="image/*" hidden>
 
 <script>
 const cells = document.querySelectorAll(".cell");
+const modal = document.getElementById("modal");
 const fileInput = document.getElementById("fileInput");
 let activeCell = null;
 
 cells.forEach(cell => {
   if (cell.classList.contains("free")) return;
-
   cell.addEventListener("click", () => {
     activeCell = cell;
-    const choice = prompt("1: テキスト入力\n2: 画像アップロード\n3: クリア済みにする");
-    if (choice === "1") {
-      const text = prompt("ゲーム名を入力");
-      if (text) {
-        cell.textContent = text;
-        cell.classList.remove("empty");
-      }
-    } else if (choice === "2") {
-      fileInput.click();
-    } else if (choice === "3") {
-      cell.classList.toggle("cleared");
-    }
+    modal.style.display = "flex";
   });
 });
+
+function closeModal() {
+  modal.style.display = "none";
+}
+
+function inputText() {
+  const text = prompt("ゲーム名を入力");
+  if (text && activeCell) {
+    activeCell.textContent = text;
+    activeCell.classList.remove("empty");
+  }
+  closeModal();
+}
+
+function uploadImage() {
+  fileInput.click();
+}
 
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
   if (!file || !activeCell) return;
-
   const reader = new FileReader();
   reader.onload = e => {
     activeCell.innerHTML = `<img src="${e.target.result}">`;
@@ -211,7 +260,13 @@ fileInput.addEventListener("change", () => {
   };
   reader.readAsDataURL(file);
   fileInput.value = "";
+  closeModal();
 });
+
+function toggleClear() {
+  if (activeCell) activeCell.classList.toggle("cleared");
+  closeModal();
+}
 
 function saveImage() {
   html2canvas(document.getElementById("captureArea")).then(canvas => {
@@ -230,3 +285,4 @@ function setTheme(main, sub, border) {
 </script>
 </body>
 </html>
+
