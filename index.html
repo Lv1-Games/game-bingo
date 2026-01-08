@@ -226,6 +226,7 @@ button.main {
 　<button onclick="setClearStar()">⭐ クリアマーク</button>
   <button onclick="setClearText()">🔤 クリア文字</button>
   <button onclick="setClearImage()">🖼 クリア画像</button>
+　<button onclick="removeClearMark()">❌ クリアマークを削除</button>
 　<hr>
   <button onclick="closeModal()">キャンセル</button>
 </div>
@@ -320,6 +321,13 @@ function setClearImage(){
     closeModal();
   };
   fileInput.click();
+}
+
+function removeClearMark(){
+  if(!activeCell) return;
+  clearMark(activeCell);
+  saveState();
+  closeModal();
 }
 
 function getState(){
