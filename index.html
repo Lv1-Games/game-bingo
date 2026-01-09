@@ -17,14 +17,14 @@
 
 body {
   font-family:"Kiwi Maru",sans-serif;
-  background:linear-gradient(135deg,#ffdde1,#ee9ca7);
+　background:#fff;
   display:flex;
   justify-content:center;
   padding:20px;
 }
 
 .container {
-  background:white;
+  background:#ffffff;
   padding:20px;
   border-radius:20px;
   box-shadow:0 10px 25px rgba(0,0,0,.15);
@@ -197,12 +197,6 @@ button.main {
   <div class="year-input"><input type="number" placeholder="2026"> 年</div>
   <div class="title">積み崩しビンゴ</div>
 
-  <div class="theme-select">
-    <button onclick="setTheme('#ff7a9e','#fff5f8','#ff9bb3')">🌸</button>
-    <button onclick="setTheme('#7ad7ff','#f3fbff','#9bdcff')">💎</button>
-    <button onclick="setTheme('#7affb2','#f5fff9','#9bffd1')">🍀</button>
-  </div>
-
   <div class="bingo">
     <div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div>
     <div class="cell empty"></div><div class="cell free">FREE</div><div class="cell empty"></div>
@@ -214,7 +208,7 @@ button.main {
 
 <div class="buttons">
   <button class="main" onclick="saveImage()">画像保存</button>
-  <button class="main" onclick="shareShortURL()">短縮URL共有</button>
+  <button class="main" onclick="shareShortURL()">URL化</button>
   <button class="main" onclick="resetAll()">リセット</button>
 </div>
 
@@ -364,22 +358,26 @@ function resetAll(){
 async function shareShortURL(){
   const json=JSON.stringify(getState());
   const comp=LZString.compressToEncodedURIComponent(json);
-  const long=`${location.origin}${location.pathname}?data=${comp}`;
-  const res=await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(long)}`);
-  const short=await res.text();
-  navigator.clipboard.writeText(short);
-  alert("短縮URLをコピーしました");
+  const url=`${location.origin}${location.pathname}?data=${comp}`;
+
+  navigator.clipboard.writeText(url);
+  alert("URLをコピーしました");
 }
 
 async function saveImage(){
   await document.fonts.ready;
-  html2canvas(captureArea,{scale:1}).then(c=>{
+  html2canvas(captureArea,{
+    scale: window.devicePixelRatio,
+    backgroundColor: null, // ← CSSを尊重させる
+    useCORS: true
+  }).then(c=>{
     const a=document.createElement("a");
-    a.href=c.toDataURL();
+    a.href=c.toDataURL("image/png");
     a.download="game_bingo.png";
     a.click();
   });
 }
+
 
 function setTheme(m,s,b){
   document.documentElement.style.setProperty("--main",m);
